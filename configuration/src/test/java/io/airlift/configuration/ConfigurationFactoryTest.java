@@ -49,10 +49,11 @@ public class ConfigurationFactoryTest
             createInjector(properties, monitor, binder -> configBinder(binder).bindConfig(AnnotatedGetter.class));
 
             Assert.fail("Expected an exception in object creation due to conflicting configuration");
-        } catch (CreationException e) {
+        }
+        catch (CreationException e) {
             monitor.assertNumberOfErrors(2);
-            Assertions.assertContainsAllOf(e.getMessage(), "not a valid setter", "getStringValue") ;
-            Assertions.assertContainsAllOf(e.getMessage(), "not a valid setter", "isBooleanValue") ;
+            Assertions.assertContainsAllOf(e.getMessage(), "not a valid setter", "getStringValue");
+            Assertions.assertContainsAllOf(e.getMessage(), "not a valid setter", "isBooleanValue");
         }
     }
 
@@ -136,11 +137,12 @@ public class ConfigurationFactoryTest
             createInjector(properties, monitor, binder -> configBinder(binder).bindConfig(LegacyConfigPresent.class));
 
             Assert.fail("Expected an exception in object creation due to conflicting configuration");
-        } catch (CreationException e) {
+        }
+        catch (CreationException e) {
             monitor.assertNumberOfErrors(1);
             monitor.assertNumberOfWarnings(1);
             monitor.assertMatchingWarningRecorded("string-value", "replaced", "Use 'string-a'");
-            Assertions.assertContainsAllOf(e.getMessage(), "string-value", "conflicts with property", "string-a") ;
+            Assertions.assertContainsAllOf(e.getMessage(), "string-value", "conflicts with property", "string-a");
         }
     }
 
@@ -187,7 +189,8 @@ public class ConfigurationFactoryTest
             createInjector(properties, monitor, binder -> configBinder(binder).bindConfig(DefunctConfigPresent.class));
 
             Assert.fail("Expected an exception in object creation due to use of defunct config");
-        } catch (CreationException e) {
+        }
+        catch (CreationException e) {
             monitor.assertNumberOfErrors(1);
             monitor.assertNumberOfWarnings(0);
             monitor.assertMatchingErrorRecorded("Defunct property", "'defunct-value", "cannot be configured");
@@ -219,7 +222,8 @@ public class ConfigurationFactoryTest
         TestMonitor monitor = new TestMonitor();
         try {
             createInjector(properties, monitor, binder -> configBinder(binder).bindConfig(BeanValidationClass.class));
-        } catch (CreationException e) {
+        }
+        catch (CreationException e) {
             monitor.assertNumberOfErrors(2);
             monitor.assertNumberOfWarnings(0);
             monitor.assertMatchingErrorRecorded("Invalid configuration property", "int-value", "must be less than or equal to 100", "BeanValidationClass");
@@ -227,6 +231,21 @@ public class ConfigurationFactoryTest
         }
     }
 
+    @Test
+    public void testFailedCoercion()
+    {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("int-value", "abc %s xyz");  // not an int
+        TestMonitor monitor = new TestMonitor();
+        try {
+            createInjector(properties, monitor, binder -> configBinder(binder).bindConfig(BeanValidationClass.class));
+        }
+        catch (CreationException e) {
+            monitor.assertNumberOfErrors(1);
+            monitor.assertNumberOfWarnings(0);
+            monitor.assertMatchingErrorRecorded("Could not coerce value 'abc %s xyz' to int (property 'int-value')", "BeanValidationClass");
+        }
+    }
 
     private static Injector createInjector(Map<String, String> properties, TestMonitor monitor, Module module)
     {
@@ -236,9 +255,9 @@ public class ConfigurationFactoryTest
         return Guice.createInjector(new ConfigurationModule(configurationFactory), module, new ValidationErrorModule(messages));
     }
 
-
     @SuppressWarnings("unused")
-    public static class AnnotatedGetter {
+    public static class AnnotatedGetter
+    {
         private String stringValue;
         private boolean booleanValue;
 
@@ -265,7 +284,8 @@ public class ConfigurationFactoryTest
         }
     }
 
-    public static class AnnotatedSetter {
+    public static class AnnotatedSetter
+    {
         private String stringValue;
         private boolean booleanValue;
 
