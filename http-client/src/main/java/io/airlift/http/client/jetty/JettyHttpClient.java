@@ -190,6 +190,7 @@ public class JettyHttpClient
             HTTP2Client client = new HTTP2Client();
             client.setInitialSessionRecvWindow(toIntExact(config.getHttp2InitialSessionReceiveWindowSize().toBytes()));
             client.setInitialStreamRecvWindow(toIntExact(config.getHttp2InitialStreamReceiveWindowSize().toBytes()));
+            client.setInputBufferSize(toIntExact(config.getHttp2InputBufferSize().toBytes()));
             client.setSelectors(CLIENT_TRANSPORT_SELECTORS);
             transport = new HttpClientTransportOverHTTP2(client);
         }
@@ -359,11 +360,13 @@ public class JettyHttpClient
         }
         catch (InterruptedException e) {
             stats.recordRequestFailed();
+            jettyRequest.abort(e);
             Thread.currentThread().interrupt();
             return responseHandler.handleException(request, e);
         }
         catch (TimeoutException e) {
             stats.recordRequestFailed();
+            jettyRequest.abort(e);
             return responseHandler.handleException(request, e);
         }
         catch (ExecutionException e) {
