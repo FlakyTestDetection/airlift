@@ -15,22 +15,25 @@
  */
 package io.airlift.http.server;
 
+import ch.qos.logback.core.AsyncAppenderBase;
 import ch.qos.logback.core.ContextBase;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
+import ch.qos.logback.core.util.FileSize;
 import io.airlift.event.client.EventClient;
 import io.airlift.log.Logger;
 import io.airlift.tracetoken.TraceTokenManager;
+import io.airlift.units.DataSize;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.RequestLog;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.component.LifeCycle;
 
 import java.io.File;
-import java.io.IOException;
 
 import static io.airlift.http.server.HttpRequestEvent.createHttpRequestEvent;
+import static io.airlift.units.DataSize.Unit.MEGABYTE;
 
 class DelimitedRequestLog
         implements RequestLog, LifeCycle
@@ -38,13 +41,14 @@ class DelimitedRequestLog
     private static final Logger log = Logger.get(DelimitedRequestLog.class);
     private static final String TEMP_FILE_EXTENSION = ".tmp";
     private static final String LOG_FILE_EXTENSION = ".log";
+    private static final FileSize BUFFER_SIZE_IN_BYTES = new FileSize(new DataSize(1, MEGABYTE).toBytes());
 
     // Tab-separated
     // Time, ip, method, url, user, agent, response code, request length, response length, response time
     private final TraceTokenManager traceTokenManager;
     private final EventClient eventClient;
     private final CurrentTimeMillisProvider currentTimeMillisProvider;
-    private final RollingFileAppender<HttpRequestEvent> fileAppender;
+    private final AsyncAppenderBase<HttpRequestEvent> asyncAppender;
 
     public DelimitedRequestLog(String filename, int maxHistory, long maxFileSizeInBytes, TraceTokenManager traceTokenManager, EventClient eventClient)
     {
@@ -67,7 +71,7 @@ class DelimitedRequestLog
 
         recoverTempFiles(filename);
 
-        fileAppender = new RollingFileAppender<>();
+        RollingFileAppender<HttpRequestEvent>  fileAppender = new RollingFileAppender<>();
         SizeAndTimeBasedFNATP<HttpRequestEvent> triggeringPolicy = new SizeAndTimeBasedFNATP<>();
         TimeBasedRollingPolicy<HttpRequestEvent> rollingPolicy = new TimeBasedRollingPolicy<>();
 
@@ -76,19 +80,26 @@ class DelimitedRequestLog
         rollingPolicy.setMaxHistory(maxHistory);
         rollingPolicy.setTimeBasedFileNamingAndTriggeringPolicy(triggeringPolicy);
         rollingPolicy.setParent(fileAppender);
-        rollingPolicy.start();
 
         triggeringPolicy.setContext(context);
         triggeringPolicy.setTimeBasedRollingPolicy(rollingPolicy);
-        triggeringPolicy.setMaxFileSize(String.valueOf(maxFileSizeInBytes));
-        triggeringPolicy.start();
+        triggeringPolicy.setMaxFileSize(new FileSize(maxFileSizeInBytes));
 
         fileAppender.setContext(context);
         fileAppender.setFile(filename);
         fileAppender.setAppend(true);
+        fileAppender.setBufferSize(BUFFER_SIZE_IN_BYTES);
         fileAppender.setLayout(httpLogLayout);
         fileAppender.setRollingPolicy(rollingPolicy);
+
+        asyncAppender = new AsyncAppenderBase<>();
+        asyncAppender.setContext(context);
+        asyncAppender.addAppender(fileAppender);
+
+        rollingPolicy.start();
+        triggeringPolicy.start();
         fileAppender.start();
+        asyncAppender.start();
     }
 
     @Override
@@ -97,7 +108,7 @@ class DelimitedRequestLog
         long currentTime = currentTimeMillisProvider.getCurrentTimeMillis();
         HttpRequestEvent event = createHttpRequestEvent(request, response, traceTokenManager, currentTime);
 
-        fileAppender.doAppend(event);
+        asyncAppender.doAppend(event);
 
         eventClient.post(event);
     }
@@ -112,7 +123,7 @@ class DelimitedRequestLog
     public void stop()
             throws Exception
     {
-        fileAppender.stop();
+        asyncAppender.stop();
     }
 
     @Override

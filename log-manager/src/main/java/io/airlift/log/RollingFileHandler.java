@@ -1,17 +1,20 @@
 package io.airlift.log;
 
+import ch.qos.logback.core.AsyncAppenderBase;
 import ch.qos.logback.core.ContextBase;
 import ch.qos.logback.core.encoder.EncoderBase;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
+import ch.qos.logback.core.util.FileSize;
+import io.airlift.units.DataSize;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.logging.ErrorManager;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
+import static io.airlift.units.DataSize.Unit.MEGABYTE;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.logging.ErrorManager.CLOSE_FAILURE;
@@ -23,8 +26,9 @@ final class RollingFileHandler
 {
     private static final String TEMP_FILE_EXTENSION = ".tmp";
     private static final String LOG_FILE_EXTENSION = ".log";
+    private static final FileSize BUFFER_SIZE_IN_BYTES = new FileSize(new DataSize(1, MEGABYTE).toBytes());
 
-    private final RollingFileAppender<String> fileAppender;
+    private final AsyncAppenderBase<String> asyncAppender;
 
     public RollingFileHandler(String filename, int maxHistory, long maxSizeInBytes)
     {
@@ -34,7 +38,7 @@ final class RollingFileHandler
 
         recoverTempFiles(filename);
 
-        fileAppender = new RollingFileAppender<>();
+        RollingFileAppender<String> fileAppender = new RollingFileAppender<>();
         TimeBasedRollingPolicy<String> rollingPolicy = new TimeBasedRollingPolicy<>();
         SizeAndTimeBasedFNATP<String> triggeringPolicy = new SizeAndTimeBasedFNATP<>();
 
@@ -43,19 +47,26 @@ final class RollingFileHandler
         rollingPolicy.setMaxHistory(maxHistory);
         rollingPolicy.setTimeBasedFileNamingAndTriggeringPolicy(triggeringPolicy);
         rollingPolicy.setParent(fileAppender);
-        rollingPolicy.start();
 
         triggeringPolicy.setContext(context);
         triggeringPolicy.setTimeBasedRollingPolicy(rollingPolicy);
-        triggeringPolicy.setMaxFileSize(Long.toString(maxSizeInBytes));
-        triggeringPolicy.start();
+        triggeringPolicy.setMaxFileSize(new FileSize(maxSizeInBytes));
 
         fileAppender.setContext(context);
         fileAppender.setFile(filename);
         fileAppender.setAppend(true);
+        fileAppender.setBufferSize(BUFFER_SIZE_IN_BYTES);
         fileAppender.setEncoder(new StringEncoder());
         fileAppender.setRollingPolicy(rollingPolicy);
+
+        asyncAppender = new AsyncAppenderBase<>();
+        asyncAppender.setContext(context);
+        asyncAppender.addAppender(fileAppender);
+
+        rollingPolicy.start();
+        triggeringPolicy.start();
         fileAppender.start();
+        asyncAppender.start();
     }
 
     @Override
@@ -76,7 +87,7 @@ final class RollingFileHandler
         }
 
         try {
-            fileAppender.doAppend(message);
+            asyncAppender.doAppend(message);
         }
         catch (Exception e) {
             // catch any exception to assure logging always works
@@ -93,7 +104,7 @@ final class RollingFileHandler
     public void close()
     {
         try {
-            fileAppender.stop();
+            asyncAppender.stop();
         }
         catch (Exception e) {
             // catch any exception to assure logging always works
@@ -101,23 +112,27 @@ final class RollingFileHandler
         }
     }
 
-    private final class StringEncoder
+    private static final class StringEncoder
             extends EncoderBase<String>
     {
+        private static final byte[] EMPTY_BYTES = new byte[0];
+
         @Override
-        public void doEncode(String event)
-                throws IOException
+        public byte[] headerBytes()
         {
-            outputStream.write(event.getBytes(UTF_8));
-            // necessary if output stream is buffered
-            outputStream.flush();
+            return EMPTY_BYTES;
         }
 
         @Override
-        public void close()
-                throws IOException
+        public byte[] encode(String event)
         {
-            outputStream.flush();
+            return event.getBytes(UTF_8);
+        }
+
+        @Override
+        public byte[] footerBytes()
+        {
+            return EMPTY_BYTES;
         }
     }
 
