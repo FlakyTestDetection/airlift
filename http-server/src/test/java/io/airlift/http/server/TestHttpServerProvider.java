@@ -25,7 +25,6 @@ import io.airlift.http.client.Request;
 import io.airlift.http.client.StatusResponseHandler.StatusResponse;
 import io.airlift.http.client.StringResponseHandler.StringResponse;
 import io.airlift.http.client.jetty.JettyHttpClient;
-import io.airlift.http.server.HttpServerBinder.HttpResourceBinding;
 import io.airlift.log.Logging;
 import io.airlift.node.NodeConfig;
 import io.airlift.node.NodeInfo;
@@ -35,14 +34,16 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
-import javax.servlet.Filter;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
+import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -310,6 +311,55 @@ public class TestHttpServerProvider
     }
 
     @Test
+    public void testClientCertificate()
+            throws Exception
+    {
+        HttpServlet servlet = new HttpServlet()
+        {
+            @Override
+            protected void doGet(HttpServletRequest request, HttpServletResponse response)
+                    throws ServletException, IOException
+            {
+                X509Certificate[] certs = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
+                if ((certs == null) || (certs.length == 0)) {
+                    throw new RuntimeException("No client certificate");
+                }
+                if (certs.length > 1) {
+                    throw new RuntimeException("Received multiple client certificates");
+                }
+                X509Certificate cert = certs[0];
+                response.getWriter().write(cert.getSubjectX500Principal().getName());
+                response.setStatus(HttpServletResponse.SC_OK);
+            }
+        };
+
+        config.setHttpEnabled(false)
+                .setAdminEnabled(false)
+                .setHttpsEnabled(true)
+                .setHttpsPort(0)
+                .setKeystorePath(getResource("clientcert/server.keystore").toString())
+                .setKeystorePassword("airlift");
+
+        createAndStartServer(servlet);
+
+        HttpClientConfig clientConfig = new HttpClientConfig()
+                .setKeyStorePath(getResource("clientcert/client.keystore").toString())
+                .setKeyStorePassword("airlift")
+                .setTrustStorePath(getResource("clientcert/client.truststore").toString())
+                .setTrustStorePassword("airlift");
+
+        System.out.println(httpServerInfo.getHttpsUri());
+        try (JettyHttpClient httpClient = new JettyHttpClient(clientConfig)) {
+            StringResponse response = httpClient.execute(
+                    prepareGet().setUri(httpServerInfo.getHttpsUri()).build(),
+                    createStringResponseHandler());
+
+            assertEquals(response.getStatusCode(), HttpServletResponse.SC_OK);
+            assertEquals(response.getBody(), "CN=testing,OU=Client,O=Airlift,L=Palo Alto,ST=CA,C=US");
+        }
+    }
+
+    @Test
     public void testShowStackTraceEnabled()
             throws Exception
     {
@@ -382,7 +432,7 @@ public class TestHttpServerProvider
         createAndStartServer();
     }
 
-    @Test(expectedExceptions = RuntimeException.class,  expectedExceptionsMessageRegExp = ".+Cannot recover key.+")
+    @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = ".+Cannot recover key.+")
     public void testInsufficientPasswordToAccessKeystore()
             throws Exception
     {
@@ -391,7 +441,7 @@ public class TestHttpServerProvider
                 .setHttpsPort(0)
                 .setKeystorePath(getResource("test.keystore.with.two.passwords").toString())
                 .setKeystorePassword("airlift");
-          createAndStartServer();
+        createAndStartServer();
     }
 
     @Test
@@ -431,9 +481,15 @@ public class TestHttpServerProvider
     private void createAndStartServer()
             throws Exception
     {
+        createAndStartServer(new DummyServlet());
+    }
+
+    private void createAndStartServer(HttpServlet servlet)
+            throws Exception
+    {
         closeChannels(httpServerInfo);
         httpServerInfo = new HttpServerInfo(config, nodeInfo);
-        createServer();
+        createServer(servlet);
         server.start();
     }
 
@@ -445,13 +501,14 @@ public class TestHttpServerProvider
     private void createServer(HttpServlet servlet)
     {
         HashLoginServiceProvider loginServiceProvider = new HashLoginServiceProvider(config);
-        HttpServerProvider serverProvider = new HttpServerProvider(httpServerInfo,
+        HttpServerProvider serverProvider = new HttpServerProvider(
+                httpServerInfo,
                 nodeInfo,
                 config,
                 servlet,
-                ImmutableSet.<Filter>of(new DummyFilter()),
-                ImmutableSet.<HttpResourceBinding>of(),
-                ImmutableSet.<Filter>of(),
+                ImmutableSet.of(new DummyFilter()),
+                ImmutableSet.of(),
+                ImmutableSet.of(),
                 new RequestStats(),
                 new NullEventClient());
         serverProvider.setTheAdminServlet(new DummyServlet());

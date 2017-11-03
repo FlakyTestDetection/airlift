@@ -62,13 +62,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.channels.ServerSocketChannel;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.lang.reflect.Field;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -99,7 +99,7 @@ public class HttpServer
 
     private final Optional<ZonedDateTime> certificateExpiration;
 
-    @SuppressWarnings({"deprecation"})
+    @SuppressWarnings("deprecation")
     public HttpServer(HttpServerInfo httpServerInfo,
             NodeInfo nodeInfo,
             HttpServerConfig config,
@@ -189,7 +189,8 @@ public class HttpServer
             }
             httpsConfiguration.addCustomizer(new SecureRequestCustomizer());
 
-            SslContextFactory sslContextFactory = new SslContextFactory(config.getKeystorePath());
+            SslContextFactory sslContextFactory = new SslContextFactory();
+            sslContextFactory.setKeyStorePath(config.getKeystorePath());
             sslContextFactory.setKeyStorePassword(config.getKeystorePassword());
             if (config.getKeyManagerPassword() != null) {
                 sslContextFactory.setKeyManagerPassword(config.getKeyManagerPassword());
@@ -199,6 +200,7 @@ public class HttpServer
             List<String> excludedCipherSuites = config.getHttpsExcludedCipherSuites();
             sslContextFactory.setExcludeCipherSuites(excludedCipherSuites.toArray(new String[excludedCipherSuites.size()]));
             sslContextFactory.setSecureRandomAlgorithm(config.getSecureRandomAlgorithm());
+            sslContextFactory.setWantClientAuth(true);
             SslConnectionFactory sslConnectionFactory = new SslConnectionFactory(sslContextFactory, "http/1.1");
 
             Integer acceptors = config.getHttpsAcceptorThreads();
@@ -240,12 +242,14 @@ public class HttpServer
             if (config.isHttpsEnabled()) {
                 adminConfiguration.addCustomizer(new SecureRequestCustomizer());
 
-                SslContextFactory sslContextFactory = new SslContextFactory(config.getKeystorePath());
+                SslContextFactory sslContextFactory = new SslContextFactory();
+                sslContextFactory.setKeyStorePath(config.getKeystorePath());
                 sslContextFactory.setKeyStorePassword(config.getKeystorePassword());
                 if (config.getKeyManagerPassword() != null) {
                     sslContextFactory.setKeyManagerPassword(config.getKeyManagerPassword());
                 }
                 sslContextFactory.setSecureRandomAlgorithm(config.getSecureRandomAlgorithm());
+                sslContextFactory.setWantClientAuth(true);
                 SslConnectionFactory sslConnectionFactory = new SslConnectionFactory(sslContextFactory, "http/1.1");
                 adminConnector = createServerConnector(
                         httpServerInfo.getAdminChannel(),
@@ -330,7 +334,7 @@ public class HttpServer
         certificateExpiration = loadAllX509Certificates(config).stream()
                 .map(X509Certificate::getNotAfter)
                 .min(naturalOrder())
-                .map(date -> ZonedDateTime.ofInstant(date.toInstant(), ZoneOffset.systemDefault()));
+                .map(date -> ZonedDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()));
     }
 
     private static ServletContextHandler createServletContext(Servlet theServlet,
