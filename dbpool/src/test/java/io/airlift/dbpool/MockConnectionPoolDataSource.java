@@ -45,7 +45,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.logging.Logger;
 
-public class MockConnectionPoolDataSource implements ConnectionPoolDataSource
+public class MockConnectionPoolDataSource
+        implements ConnectionPoolDataSource
 {
     long creationSleep;
     SQLException createException;
@@ -113,10 +114,11 @@ public class MockConnectionPoolDataSource implements ConnectionPoolDataSource
         loginTimeout = seconds;
     }
 
-    public static class MockPooledConnection implements PooledConnection
+    public static class MockPooledConnection
+            implements PooledConnection
     {
         private final MockConnectionPoolDataSource dataSource;
-        private boolean closed = false;
+        private boolean closed;
         private List<ConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<ConnectionEventListener>();
 
         public MockPooledConnection(MockConnectionPoolDataSource dataSource)
@@ -182,10 +184,10 @@ public class MockConnectionPoolDataSource implements ConnectionPoolDataSource
         {
             throw new UnsupportedOperationException();
         }
-
     }
 
-    public static class MockConnection implements Connection
+    public static class MockConnection
+            implements Connection
     {
         private final MockPooledConnection mockPooledConnection;
         private boolean closed;
@@ -587,5 +589,4 @@ public class MockConnectionPoolDataSource implements ConnectionPoolDataSource
             throw new UnsupportedOperationException();
         }
     }
-
 }

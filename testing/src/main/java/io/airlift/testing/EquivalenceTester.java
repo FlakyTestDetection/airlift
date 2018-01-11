@@ -17,7 +17,7 @@ package io.airlift.testing;
 
 /**
  * Derived from http://code.google.com/p/kawala
- *
+ * <p>
  * Licensed under Apache License, Version 2.0
  */
 
@@ -55,6 +55,8 @@ import static java.util.Objects.requireNonNull;
  */
 public final class EquivalenceTester
 {
+    private EquivalenceTester() {}
+
     @Deprecated
     public static void check(Collection<?>... equivalenceClasses)
     {
@@ -138,7 +140,8 @@ public final class EquivalenceTester
                         if (element.equals(new OtherClass())) {
                             errors.add(new ElementCheckFailure(EQUAL_TO_UNRELATED_CLASS, classNumber, elementNumber, element));
                         }
-                    } catch (ClassCastException e) {
+                    }
+                    catch (ClassCastException e) {
                         errors.add(new ElementCheckFailure(EQUAL_TO_UNRELATED_CLASS_CLASS_CAST_EXCEPTION, classNumber, elementNumber, element));
                     }
 
@@ -320,7 +323,6 @@ public final class EquivalenceTester
 
     public static class InitialComparisonCheck
     {
-
         private InitialComparisonCheck()
         {
         }
@@ -341,7 +343,7 @@ public final class EquivalenceTester
         }
     }
 
-    public static class ComparisonCheck <T extends Comparable<T>>
+    public static class ComparisonCheck<T extends Comparable<T>>
     {
         private final EquivalenceCheck<T> equivalence = new EquivalenceCheck<T>();
 
@@ -396,7 +398,6 @@ public final class EquivalenceTester
                             }
                         }
                     }
-
                 }
             }
 
@@ -407,7 +408,8 @@ public final class EquivalenceTester
         }
     }
 
-    public static enum EquivalenceFailureType {
+    public static enum EquivalenceFailureType
+    {
         EQUAL_TO_NULL("Element (%d, %d):<%s> returns true when compared to null via equals()"),
         EQUAL_NULL_EXCEPTION("Element (%d, %d):<%s> throws NullPointerException when when compared to null via equals()"),
         COMPARE_EQUAL_TO_NULL("Element (%d, %d):<%s> implements Comparable but does not throw NullPointerException when compared to null"),
@@ -423,14 +425,12 @@ public final class EquivalenceTester
         COMPARE_EQUAL("Element (%d, %d):<%s> implements Comparable and returns 0 when compared to element (%d, %d):<%s>"),
         NOT_LESS_THAN("Element (%d, %d):<%s> is not less than (%d, %d):<%s>"),
         NOT_GREATER_THAN("Element (%d, %d):<%s> is not greater than (%d, %d):<%s>"),
-        ;
-
+        /**/;
 
         private final String message;
 
         EquivalenceFailureType(String message)
         {
-
             this.message = message;
         }
 
@@ -518,7 +518,8 @@ public final class EquivalenceTester
         }
     }
 
-    public static class PairCheckFailure extends ElementCheckFailure
+    public static class PairCheckFailure
+            extends ElementCheckFailure
     {
         private final int secondaryClassNumber;
         private final int secondaryElementNumber;

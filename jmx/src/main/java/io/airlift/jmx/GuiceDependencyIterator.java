@@ -29,14 +29,15 @@ import java.util.Set;
 /**
  * Utility for iterating over dependent classes in a Guice injector
  */
-class GuiceDependencyIterator implements Iterator<Class<?>>, Iterable<Class<?>>
+class GuiceDependencyIterator
+        implements Iterator<Class<?>>, Iterable<Class<?>>
 {
     private final Set<Key<?>> visited;
     private final Iterator<Dependency<?>> currentDependencyIterator;
     private final TypeLiteral<?> creationTypeLiteral;
     private final Class<?> creationClass;
 
-    private Class<?> currentClass = null;
+    private Class<?> currentClass;
 
     /**
      * @param typeLiteral the type literal to iterate over

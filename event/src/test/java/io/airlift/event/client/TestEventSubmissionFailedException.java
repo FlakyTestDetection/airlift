@@ -15,6 +15,7 @@
  */
 package io.airlift.event.client;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
 import org.testng.annotations.Test;
@@ -23,7 +24,6 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 
-import static com.google.common.collect.ImmutableMap.of;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
@@ -48,7 +48,7 @@ public class TestEventSubmissionFailedException
     public void testSingleCause()
     {
         RuntimeException cause = new RuntimeException();
-        EventSubmissionFailedException e = new EventSubmissionFailedException("service", "type", of(URI.create("/"), cause));
+        EventSubmissionFailedException e = new EventSubmissionFailedException("service", "type", ImmutableMap.of(URI.create("/"), cause));
 
         assertSame(e.getCause(), cause);
     }
@@ -71,9 +71,9 @@ public class TestEventSubmissionFailedException
         RuntimeException cause2 = new RuntimeException("x");
 
         Map<URI, RuntimeException> causes = ImmutableSortedMap.<URI, RuntimeException>orderedBy(Ordering.explicit(uri1, uri2))
-            .put(uri1, cause1)
-            .put(uri2, cause2)
-            .build();
+                .put(uri1, cause1)
+                .put(uri2, cause2)
+                .build();
 
         EventSubmissionFailedException e = new EventSubmissionFailedException("service", "type", causes);
 

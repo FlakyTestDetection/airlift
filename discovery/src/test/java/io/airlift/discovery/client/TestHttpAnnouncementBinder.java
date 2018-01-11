@@ -23,13 +23,14 @@ import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
 import io.airlift.discovery.client.testing.TestingDiscoveryModule;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.net.URI;
 import java.util.Set;
 
 import static io.airlift.discovery.client.ServiceAnnouncement.serviceAnnouncement;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class TestHttpAnnouncementBinder
 {
@@ -40,8 +41,7 @@ public class TestHttpAnnouncementBinder
                 URI.create("http://127.0.0.1:4444"),
                 URI.create("http://example.com:4444"),
                 null,
-                null
-        );
+                null);
 
         Injector injector = Guice.createInjector(
                 new TestingDiscoveryModule(),
@@ -53,8 +53,7 @@ public class TestHttpAnnouncementBinder
                         binder.bind(AnnouncementHttpServerInfo.class).toInstance(httpServerInfo);
                         DiscoveryBinder.discoveryBinder(binder).bindHttpAnnouncement("apple");
                     }
-                }
-        );
+                });
 
         ServiceAnnouncement announcement = serviceAnnouncement("apple")
                 .addProperty("http", httpServerInfo.getHttpUri().toASCIIString())
@@ -75,8 +74,7 @@ public class TestHttpAnnouncementBinder
                 null,
                 null,
                 URI.create("https://127.0.0.1:4444"),
-                URI.create("https://example.com:4444")
-        );
+                URI.create("https://example.com:4444"));
 
         Injector injector = Guice.createInjector(
                 new TestingDiscoveryModule(),
@@ -88,8 +86,7 @@ public class TestHttpAnnouncementBinder
                         binder.bind(AnnouncementHttpServerInfo.class).toInstance(httpServerInfo);
                         DiscoveryBinder.discoveryBinder(binder).bindHttpAnnouncement("apple");
                     }
-                }
-        );
+                });
 
         ServiceAnnouncement announcement = serviceAnnouncement("apple")
                 .addProperty("https", httpServerInfo.getHttpsUri().toASCIIString())
@@ -110,8 +107,7 @@ public class TestHttpAnnouncementBinder
                 URI.create("http://127.0.0.1:4444"),
                 URI.create("http://example.com:4444"),
                 URI.create("https://127.0.0.1:4444"),
-                URI.create("https://example.com:4444")
-        );
+                URI.create("https://example.com:4444"));
 
         Injector injector = Guice.createInjector(
                 new TestingDiscoveryModule(),
@@ -123,8 +119,7 @@ public class TestHttpAnnouncementBinder
                         binder.bind(AnnouncementHttpServerInfo.class).toInstance(httpServerInfo);
                         DiscoveryBinder.discoveryBinder(binder).bindHttpAnnouncement("apple");
                     }
-                }
-        );
+                });
 
         ServiceAnnouncement announcement = serviceAnnouncement("apple")
                 .addProperty("http", httpServerInfo.getHttpUri().toASCIIString())
@@ -147,8 +142,7 @@ public class TestHttpAnnouncementBinder
                 URI.create("http://127.0.0.1:4444"),
                 URI.create("http://example.com:4444"),
                 URI.create("https://127.0.0.1:4444"),
-                URI.create("https://example.com:4444")
-        );
+                URI.create("https://example.com:4444"));
 
         Injector injector = Guice.createInjector(
                 new TestingDiscoveryModule(),
@@ -160,8 +154,7 @@ public class TestHttpAnnouncementBinder
                         binder.bind(AnnouncementHttpServerInfo.class).toInstance(httpServerInfo);
                         DiscoveryBinder.discoveryBinder(binder).bindHttpAnnouncement("apple").addProperty("a", "apple");
                     }
-                }
-        );
+                });
 
         ServiceAnnouncement announcement = serviceAnnouncement("apple")
                 .addProperty("a", "apple")
@@ -180,10 +173,10 @@ public class TestHttpAnnouncementBinder
 
     private void assertAnnouncement(Set<ServiceAnnouncement> actualAnnouncements, ServiceAnnouncement expected)
     {
-        Assert.assertNotNull(actualAnnouncements);
-        Assert.assertEquals(actualAnnouncements.size(), 1);
+        assertNotNull(actualAnnouncements);
+        assertEquals(actualAnnouncements.size(), 1);
         ServiceAnnouncement announcement = Iterables.getOnlyElement(actualAnnouncements);
-        Assert.assertEquals(announcement.getType(), expected.getType());
-        Assert.assertEquals(announcement.getProperties(), expected.getProperties());
+        assertEquals(announcement.getType(), expected.getType());
+        assertEquals(announcement.getProperties(), expected.getProperties());
     }
 }

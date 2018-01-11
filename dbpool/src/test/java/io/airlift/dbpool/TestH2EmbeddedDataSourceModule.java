@@ -24,7 +24,6 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import io.airlift.configuration.ConfigurationFactory;
 import io.airlift.configuration.ConfigurationModule;
-import io.airlift.testing.Assertions;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -40,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.airlift.testing.Assertions.assertInstanceOf;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.mockito.Mockito.mock;
 import static org.testng.Assert.assertEquals;
@@ -113,7 +113,7 @@ public class TestH2EmbeddedDataSourceModule
 
         ObjectHolder objectHolder = injector.getInstance(ObjectHolder.class);
 
-        Assertions.assertInstanceOf(objectHolder.dataSource, H2EmbeddedDataSource.class);
+        assertInstanceOf(objectHolder.dataSource, H2EmbeddedDataSource.class);
     }
 
     @Test(groups = "requiresTempFile")
@@ -141,23 +141,22 @@ public class TestH2EmbeddedDataSourceModule
         Map<String, String> properties = createDefaultConfigurationProperties(prefix, temporaryFile.getAbsolutePath());
 
         Injector injector = createInjector(properties,
-                                           new H2EmbeddedDataSourceModule(prefix, MainBinding.class, AliasBinding.class),
-                                           new Module()
-                                           {
-                                               @Override
-                                               public void configure(Binder binder)
-                                               {
-                                                   binder.bind(TwoObjectsHolder.class);
-                                               }
-                                           }
-        );
+                new H2EmbeddedDataSourceModule(prefix, MainBinding.class, AliasBinding.class),
+                new Module()
+                {
+                    @Override
+                    public void configure(Binder binder)
+                    {
+                        binder.bind(TwoObjectsHolder.class);
+                    }
+                });
 
         ObjectHolder objectHolder = injector.getInstance(ObjectHolder.class);
         TwoObjectsHolder twoObjectsHolder = injector.getInstance(TwoObjectsHolder.class);
 
         // Held data source objects should all be of the correct type
-        Assertions.assertInstanceOf(twoObjectsHolder.mainDataSource, H2EmbeddedDataSource.class);
-        Assertions.assertInstanceOf(twoObjectsHolder.aliasedDataSource, H2EmbeddedDataSource.class);
+        assertInstanceOf(twoObjectsHolder.mainDataSource, H2EmbeddedDataSource.class);
+        assertInstanceOf(twoObjectsHolder.aliasedDataSource, H2EmbeddedDataSource.class);
 
         // And should all be references to the same object
         assertSame(objectHolder.dataSource, twoObjectsHolder.mainDataSource);
@@ -185,7 +184,7 @@ public class TestH2EmbeddedDataSourceModule
         ObjectHolder objectHolder = injector.getInstance(ObjectHolder.class);
 
         // Make sure we picked up the value with the expected prefix
-        Assertions.assertInstanceOf(objectHolder.dataSource, H2EmbeddedDataSource.class);
+        assertInstanceOf(objectHolder.dataSource, H2EmbeddedDataSource.class);
 
         H2EmbeddedDataSource created = (H2EmbeddedDataSource) objectHolder.dataSource;
 
@@ -212,7 +211,8 @@ public class TestH2EmbeddedDataSourceModule
         List<Module> moduleList = ImmutableList.<Module>builder()
                 .add(modules)
                 .add(new ConfigurationModule(configurationFactory))
-                .add(new Module() {
+                .add(new Module()
+                {
                     @Override
                     public void configure(Binder binder)
                     {
@@ -224,7 +224,6 @@ public class TestH2EmbeddedDataSourceModule
 
         return Guice.createInjector(moduleList);
     }
-
 
     // Any test that actually instantiates an H2EmbeddedDataSource requires a temporary file to use for the database
     private File temporaryFile;
@@ -257,4 +256,3 @@ public class TestH2EmbeddedDataSourceModule
         return properties;
     }
 }
-

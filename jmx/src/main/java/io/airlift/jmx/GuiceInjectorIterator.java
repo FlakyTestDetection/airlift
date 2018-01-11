@@ -25,15 +25,16 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-class GuiceInjectorIterator implements Iterator<Class<?>>, Iterable<Class<?>>
+class GuiceInjectorIterator
+        implements Iterator<Class<?>>, Iterable<Class<?>>
 {
     private final Set<Key<?>> visited = new HashSet<>();
     private final Iterator<Key<?>> keyIterator;
     private final Injector injector;
 
     private boolean needsReset = true;
-    private Class<?> currentClass = null;
-    private GuiceDependencyIterator currentDependencyIterator = null;
+    private Class<?> currentClass;
+    private GuiceDependencyIterator currentDependencyIterator;
 
     /**
      * @param injector the injector to iterate over

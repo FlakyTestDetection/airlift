@@ -15,9 +15,9 @@
  */
 package io.airlift.testing;
 
-/**
+/*
  * Derived from http://code.google.com/p/kawala
- *
+ * <p>
  * Licensed under Apache License, Version 2.0
  */
 
@@ -79,9 +79,7 @@ public class TestEquivalenceTester
                             new PairCheckFailure(EQUAL, 0, 0, "foo", 1, 0, "foo"),
                             new PairCheckFailure(EQUAL, 1, 0, "foo", 0, 0, "foo"),
                             new PairCheckFailure(COMPARE_EQUAL, 0, 0, "foo", 1, 0, "foo"),
-                            new PairCheckFailure(COMPARE_EQUAL, 1, 0, "foo", 0, 0, "foo")
-                    )
-            );
+                            new PairCheckFailure(COMPARE_EQUAL, 1, 0, "foo", 0, 0, "foo")));
         }
     }
 
@@ -100,11 +98,13 @@ public class TestEquivalenceTester
         }
     }
 
+    @SuppressWarnings({"EqualsAndHashcode", "checkstyle:EqualsHashCode"})
     static class NotReflexive
     {
+        @SuppressWarnings("override")
         public boolean equals(Object that)
         {
-            return that != null && that instanceof NotReflexive && this != that;
+            return (that instanceof NotReflexive) && (this != that);
         }
     }
 
@@ -123,8 +123,11 @@ public class TestEquivalenceTester
         }
     }
 
-    static class ComparableNotReflexive implements Comparable<ComparableNotReflexive>
+    @SuppressWarnings("ComparableImplementedButEqualsNotOverridden")
+    static class ComparableNotReflexive
+            implements Comparable<ComparableNotReflexive>
     {
+        @SuppressWarnings("ObjectEquality")
         @Override
         public int compareTo(ComparableNotReflexive that)
         {
@@ -155,16 +158,17 @@ public class TestEquivalenceTester
 
     static class NotSymmetric
     {
-        private int id;
+        private final int id;
 
         NotSymmetric(int id)
         {
             this.id = id;
         }
 
+        @Override
         public boolean equals(Object that)
         {
-            return that != null && that instanceof NotSymmetric && id >= ((NotSymmetric) that).id;
+            return (that instanceof NotSymmetric) && (id >= ((NotSymmetric) that).id);
         }
 
         @Override
@@ -194,9 +198,10 @@ public class TestEquivalenceTester
         }
     }
 
-    static class ComparableNotSymmetric implements Comparable<ComparableNotSymmetric>
+    static class ComparableNotSymmetric
+            implements Comparable<ComparableNotSymmetric>
     {
-        private int id;
+        private final int id;
 
         ComparableNotSymmetric(int id)
         {
@@ -213,9 +218,10 @@ public class TestEquivalenceTester
             return -1;
         }
 
+        @Override
         public boolean equals(Object that)
         {
-            return that != null && that instanceof ComparableNotSymmetric;
+            return that instanceof ComparableNotSymmetric;
         }
 
         @Override
@@ -240,9 +246,11 @@ public class TestEquivalenceTester
         }
     }
 
+    @SuppressWarnings({"EqualsAndHashcode", "checkstyle:EqualsHashCode"})
     static class EqualsNull
     {
-        @SuppressWarnings({"EqualsWhichDoesntCheckParameterClass"})
+        @Override
+        @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
         public boolean equals(Object that)
         {
             return that == null || this == that;
@@ -264,9 +272,11 @@ public class TestEquivalenceTester
         }
     }
 
+    @SuppressWarnings({"EqualsAndHashcode", "checkstyle:EqualsHashCode"})
     static class EqualsNullThrowsException
     {
-        @SuppressWarnings({"EqualsWhichDoesntCheckParameterClass"})
+        @Override
+        @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
         public boolean equals(Object that)
         {
             return this.hashCode() == that.hashCode();
@@ -288,9 +298,11 @@ public class TestEquivalenceTester
         }
     }
 
+    @SuppressWarnings({"EqualsAndHashcode", "checkstyle:EqualsHashCode"})
     static class EqualsUnrelatedClass
     {
-        @SuppressWarnings({"EqualsWhichDoesntCheckParameterClass"})
+        @Override
+        @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
         public boolean equals(Object that)
         {
             return that != null;
@@ -312,9 +324,11 @@ public class TestEquivalenceTester
         }
     }
 
+    @SuppressWarnings({"EqualsAndHashcode", "checkstyle:EqualsHashCode"})
     static class EqualsOtherClassThrowsException
     {
-        @SuppressWarnings({"EqualsWhichDoesntCheckParameterClass"})
+        @Override
+        @SuppressWarnings({"EqualsWhichDoesntCheckParameterClass", "RedundantCast"})
         public boolean equals(Object that)
         {
             return that != null && ((EqualsOtherClassThrowsException) that).hashCode() == this.hashCode();
@@ -336,8 +350,7 @@ public class TestEquivalenceTester
                     new PairCheckFailure(COMPARE_CLASS_CAST_EXCEPTION, 0, 1, "Hello", 0, 0, notComparable),
                     new PairCheckFailure(NOT_EQUAL, 0, 0, notComparable, 0, 1, "Hello"),
                     new PairCheckFailure(NOT_EQUAL, 0, 1, "Hello", 0, 0, notComparable),
-                    new PairCheckFailure(HASH_CODE_NOT_SAME, 0, 0, notComparable, 0, 1, "Hello")
-            );
+                    new PairCheckFailure(HASH_CODE_NOT_SAME, 0, 0, notComparable, 0, 1, "Hello"));
         }
 
         try {
@@ -351,8 +364,7 @@ public class TestEquivalenceTester
                     new PairCheckFailure(COMPARE_CLASS_CAST_EXCEPTION, 0, 0, "Hello", 0, 1, notComparable),
                     new PairCheckFailure(NOT_EQUAL, 0, 0, "Hello", 0, 1, notComparable),
                     new PairCheckFailure(NOT_EQUAL, 0, 1, notComparable, 0, 0, "Hello"),
-                    new PairCheckFailure(HASH_CODE_NOT_SAME, 0, 0, "Hello", 0, 1, notComparable)
-            );
+                    new PairCheckFailure(HASH_CODE_NOT_SAME, 0, 0, "Hello", 0, 1, notComparable));
         }
 
         try {
@@ -364,8 +376,7 @@ public class TestEquivalenceTester
         }
         catch (EquivalenceAssertionError e) {
             assertExpectedFailures(e,
-                    new PairCheckFailure(COMPARE_CLASS_CAST_EXCEPTION, 1, 0, "Hello", 0, 0, notComparable)
-            );
+                    new PairCheckFailure(COMPARE_CLASS_CAST_EXCEPTION, 1, 0, "Hello", 0, 0, notComparable));
         }
 
         try {
@@ -377,8 +388,7 @@ public class TestEquivalenceTester
         }
         catch (EquivalenceAssertionError e) {
             assertExpectedFailures(e,
-                    new PairCheckFailure(COMPARE_CLASS_CAST_EXCEPTION, 0, 0, "Hello", 1, 0, notComparable)
-            );
+                    new PairCheckFailure(COMPARE_CLASS_CAST_EXCEPTION, 0, 0, "Hello", 1, 0, notComparable));
         }
     }
 
@@ -398,8 +408,7 @@ public class TestEquivalenceTester
         }
         catch (EquivalenceAssertionError e) {
             assertExpectedFailures(e,
-                    new ElementCheckFailure(COMPARE_EQUAL_TO_NULL, 0, 0, comparableThatDoesNotThrowNPE)
-            );
+                    new ElementCheckFailure(COMPARE_EQUAL_TO_NULL, 0, 0, comparableThatDoesNotThrowNPE));
         }
     }
 
@@ -429,7 +438,6 @@ public class TestEquivalenceTester
                 .addGreaterGroup("bob", "bob")
                 .addGreaterGroup("charlie", "charlie", "charlie")
                 .check();
-
     }
 
     @Test
@@ -445,8 +453,7 @@ public class TestEquivalenceTester
         catch (EquivalenceAssertionError e) {
             assertExpectedFailures(e,
                     new PairCheckFailure(NOT_LESS_THAN, 0, 0, 1, 1, 0, 0),
-                    new PairCheckFailure(NOT_GREATER_THAN, 1, 0, 0, 0, 0, 1)
-            );
+                    new PairCheckFailure(NOT_GREATER_THAN, 1, 0, 0, 0, 0, 1));
         }
         try {
             comparisonTester()
@@ -458,8 +465,7 @@ public class TestEquivalenceTester
         catch (EquivalenceAssertionError e) {
             assertExpectedFailures(e,
                     new PairCheckFailure(NOT_LESS_THAN, 0, 0, "bob", 1, 0, "alice"),
-                    new PairCheckFailure(NOT_GREATER_THAN, 1, 0, "alice", 0, 0, "bob")
-            );
+                    new PairCheckFailure(NOT_GREATER_THAN, 1, 0, "alice", 0, 0, "bob"));
         }
         try {
             comparisonTester()
@@ -473,8 +479,7 @@ public class TestEquivalenceTester
                     new PairCheckFailure(NOT_LESS_THAN, 0, 0, 1, 1, 0, 0),
                     new PairCheckFailure(NOT_GREATER_THAN, 1, 0, 0, 0, 0, 1),
                     new PairCheckFailure(NOT_LESS_THAN, 0, 0, 1, 1, 1, 0),
-                    new PairCheckFailure(NOT_GREATER_THAN, 1, 1, 0, 0, 0, 1)
-            );
+                    new PairCheckFailure(NOT_GREATER_THAN, 1, 1, 0, 0, 0, 1));
         }
         try {
             comparisonTester()
@@ -488,8 +493,7 @@ public class TestEquivalenceTester
                     new PairCheckFailure(NOT_LESS_THAN, 0, 0, "bob", 1, 0, "alice"),
                     new PairCheckFailure(NOT_GREATER_THAN, 1, 0, "alice", 0, 0, "bob"),
                     new PairCheckFailure(NOT_LESS_THAN, 0, 0, "bob", 1, 1, "alice"),
-                    new PairCheckFailure(NOT_GREATER_THAN, 1, 1, "alice", 0, 0, "bob")
-            );
+                    new PairCheckFailure(NOT_GREATER_THAN, 1, 1, "alice", 0, 0, "bob"));
         }
     }
 
@@ -509,8 +513,7 @@ public class TestEquivalenceTester
                     new PairCheckFailure(NOT_EQUAL, 1, 1, 2, 1, 0, 1),
                     new PairCheckFailure(COMPARE_NOT_EQUAL, 1, 0, 1, 1, 1, 2),
                     new PairCheckFailure(COMPARE_NOT_EQUAL, 1, 1, 2, 1, 0, 1),
-                    new PairCheckFailure(HASH_CODE_NOT_SAME, 1, 0, 1, 1, 1, 2)
-            );
+                    new PairCheckFailure(HASH_CODE_NOT_SAME, 1, 0, 1, 1, 1, 2));
         }
         try {
             comparisonTester()
@@ -525,10 +528,8 @@ public class TestEquivalenceTester
                     new PairCheckFailure(NOT_EQUAL, 1, 1, "charlie", 1, 0, "bob"),
                     new PairCheckFailure(COMPARE_NOT_EQUAL, 1, 0, "bob", 1, 1, "charlie"),
                     new PairCheckFailure(COMPARE_NOT_EQUAL, 1, 1, "charlie", 1, 0, "bob"),
-                    new PairCheckFailure(HASH_CODE_NOT_SAME, 1, 0, "bob", 1, 1, "charlie")
-            );
+                    new PairCheckFailure(HASH_CODE_NOT_SAME, 1, 0, "bob", 1, 1, "charlie"));
         }
-
     }
 
     @Test
@@ -545,8 +546,7 @@ public class TestEquivalenceTester
         catch (EquivalenceAssertionError e) {
             assertExpectedFailures(e,
                     new PairCheckFailure(COMPARE_CLASS_CAST_EXCEPTION, 0, 0, 5, 1, 0, "string"),
-                    new PairCheckFailure(COMPARE_CLASS_CAST_EXCEPTION, 1, 0, "string", 0, 0, 5)
-            );
+                    new PairCheckFailure(COMPARE_CLASS_CAST_EXCEPTION, 1, 0, "string", 0, 0, 5));
         }
     }
 
@@ -570,10 +570,12 @@ public class TestEquivalenceTester
             return ComparisonChain.start().compare(value, o.value).result();
         }
 
-        @SuppressWarnings({"EqualsWhichDoesntCheckParameterClass"})
+        @Override
+        @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
         public boolean equals(Object that)
         {
-            return that != null && that instanceof ComparableThatDoesNotThrowNPE && value == ((ComparableThatDoesNotThrowNPE) that).value;
+            return (that instanceof ComparableThatDoesNotThrowNPE) &&
+                    (value == ((ComparableThatDoesNotThrowNPE) that).value);
         }
 
         @Override
@@ -583,7 +585,7 @@ public class TestEquivalenceTester
         }
     }
 
-    private void assertExpectedFailures(EquivalenceAssertionError e, ElementCheckFailure... expected)
+    private static void assertExpectedFailures(EquivalenceAssertionError e, ElementCheckFailure... expected)
     {
         assertEqualsIgnoreOrder(e.getFailures(), newArrayList(expected));
     }

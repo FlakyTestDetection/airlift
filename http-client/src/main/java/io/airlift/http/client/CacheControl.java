@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -50,15 +50,15 @@ public class CacheControl
 
     private int maxAge = -1;
     private int sMaxAge = -1;
-    private boolean isPrivate = false;
-    private boolean noCache = false;
-    private boolean noStore = false;
+    private boolean isPrivate;
+    private boolean noCache;
+    private boolean noStore;
     private boolean noTransform = true;
-    private boolean mustRevalidate = false;
-    private boolean proxyRevalidate = false;
-    private Map<String, String> cacheExtensions = null;
-    private List<String> noCacheFields = null;
-    private List<String> privateFields = null;
+    private boolean mustRevalidate;
+    private boolean proxyRevalidate;
+    private Map<String, String> cacheExtensions;
+    private List<String> noCacheFields;
+    private List<String> privateFields;
 
     public CacheControl()
     {
@@ -276,13 +276,14 @@ public class CacheControl
         return string;
     }
 
-    private static void handleFields(List<String> fields, StringBuilder buffer) {
+    private static void handleFields(List<String> fields, StringBuilder buffer)
+    {
         if (fields.isEmpty()) {
             return;
         }
         buffer.append('=');
         buffer.append('\"');
-        for (Iterator<String> it = fields.iterator(); it.hasNext();) {
+        for (Iterator<String> it = fields.iterator(); it.hasNext(); ) {
             buffer.append(it.next());
             if (it.hasNext()) {
                 buffer.append(',');

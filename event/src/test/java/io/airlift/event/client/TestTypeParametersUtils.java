@@ -1,5 +1,4 @@
-/**
- *
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -32,17 +31,17 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
-@SuppressWarnings("UnusedDeclaration")
+@SuppressWarnings({"PublicField", "unused"})
 public class TestTypeParametersUtils
 {
-    @SuppressWarnings("RawUseOfParameterizedType")
+    @SuppressWarnings("rawtypes")
     public Map mapNotGeneric;
     public Map<Key, Value> mapSimple;
     public Map<?, ?> mapWildcard;
     public Map<? extends Key, ? extends Value> mapExtendsWildcard;
     public Map<? super Key, ? extends Value> mapSuperWildcard;
 
-    @SuppressWarnings("RawUseOfParameterizedType")
+    @SuppressWarnings("rawtypes")
     public MyMap myMapNotGeneric;
     public MyMap<Fake, Value, Key> myMapSimple;
     public MyMap<?, ?, ?> myMapWildcard;
@@ -56,7 +55,7 @@ public class TestTypeParametersUtils
             throws Exception
     {
         assertNull(getParameters("mapNotGeneric"));
-        assertEquals(getParameters("mapSimple"), new Type[] { Key.class, Value.class });
+        assertEquals(getParameters("mapSimple"), new Type[] {Key.class, Value.class});
         assertTwoWildcardTypes(getParameters("mapWildcard"));
         assertTwoWildcardTypes(getParameters("mapExtendsWildcard"));
         assertTwoWildcardTypes(getParameters("mapSuperWildcard"));
@@ -67,7 +66,7 @@ public class TestTypeParametersUtils
             throws Exception
     {
         assertTwoTypeVariables(getParameters("myMapNotGeneric"));
-        assertEquals(getParameters("myMapSimple"), new Type[] { Key.class, Value.class });
+        assertEquals(getParameters("myMapSimple"), new Type[] {Key.class, Value.class});
         assertTwoWildcardTypes(getParameters("myMapWildcard"));
         assertTwoWildcardTypes(getParameters("myMapExtendsWildcard"));
         assertTwoWildcardTypes(getParameters("myMapSuperWildcard"));
@@ -77,7 +76,7 @@ public class TestTypeParametersUtils
     public void testFixedMap()
             throws Exception
     {
-        assertEquals(getParameters("fixedMap"), new Type[] { Key.class, Value.class });
+        assertEquals(getParameters("fixedMap"), new Type[] {Key.class, Value.class});
     }
 
     private static void assertTwoWildcardTypes(Type[] types)
@@ -107,22 +106,24 @@ public class TestTypeParametersUtils
         return getTypeParameters(Map.class, getClass().getField(fieldName).getGenericType());
     }
 
-    public static class MyMap<Unused, MapValue, MapKey>
-            extends AbstractMap<MapKey, MapValue>
+    public static class MyMap<X, V, K>
+            extends AbstractMap<K, V>
     {
-        public Iterator<MapKey> iterator()
+        public Iterator<K> iterator()
         {
             return null;
         }
 
+        @Override
         public int size()
         {
             return 0;
         }
 
-        public Set<Entry<MapKey, MapValue>> entrySet()
+        @Override
+        public Set<Entry<K, V>> entrySet()
         {
-            return null;
+            throw new UnsupportedOperationException();
         }
     }
 

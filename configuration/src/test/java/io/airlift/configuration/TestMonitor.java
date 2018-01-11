@@ -17,12 +17,15 @@ package io.airlift.configuration;
 
 import com.google.common.base.Joiner;
 import com.google.inject.spi.Message;
-import org.testng.Assert;
 
 import java.util.ArrayList;
 import java.util.List;
 
-class TestMonitor implements Problems.Monitor
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
+
+class TestMonitor
+        implements Problems.Monitor
 {
     private List<Message> errors = new ArrayList<Message>();
     private List<Message> warnings = new ArrayList<Message>();
@@ -41,12 +44,12 @@ class TestMonitor implements Problems.Monitor
 
     public void assertNumberOfErrors(int expected)
     {
-        Assert.assertEquals(errors.size(), expected, String.format("Number of errors is incorrect, actual errors: %s", errorsString()));
+        assertEquals(errors.size(), expected, String.format("Number of errors is incorrect, actual errors: %s", errorsString()));
     }
 
     public void assertNumberOfWarnings(int expected)
     {
-        Assert.assertEquals(warnings.size(), expected, String.format("Number of warnings is incorrect, actual warnings: %s", warningsString()));
+        assertEquals(warnings.size(), expected, String.format("Number of warnings is incorrect, actual warnings: %s", warningsString()));
     }
 
     public void assertMatchingWarningRecorded(String... parts)
@@ -63,7 +66,7 @@ class TestMonitor implements Problems.Monitor
             }
         }
 
-        Assert.fail(String.format("Expected message (%s) not found in monitor warning list. Warnings: %s", Joiner.on(", ").join(parts), warningsString()));
+        fail(String.format("Expected message (%s) not found in monitor warning list. Warnings: %s", Joiner.on(", ").join(parts), warningsString()));
     }
 
     public void assertMatchingErrorRecorded(String... parts)
@@ -80,7 +83,7 @@ class TestMonitor implements Problems.Monitor
             }
         }
 
-        Assert.fail(String.format("Expected message (%s) not found in monitor error list. Errors: %s", Joiner.on(", ").join(parts), errorsString()));
+        fail(String.format("Expected message (%s) not found in monitor error list. Errors: %s", Joiner.on(", ").join(parts), errorsString()));
     }
 
     private String errorsString()
@@ -101,6 +104,4 @@ class TestMonitor implements Problems.Monitor
         }
         return builder.toString();
     }
-
 }
-

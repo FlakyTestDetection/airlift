@@ -6,13 +6,15 @@ import java.security.cert.X509Certificate;
 
 import static java.util.Base64.getMimeEncoder;
 
-public class PemWriter
+public final class PemWriter
 {
+    private PemWriter() {}
+
     public static String writePrivateKey(PrivateKey privateKey)
     {
         return encodePem("PRIVATE KEY", privateKey.getEncoded());
     }
-    
+
     public static String writeCertificate(X509Certificate certificate)
             throws CertificateEncodingException
     {
